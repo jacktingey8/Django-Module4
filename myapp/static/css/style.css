@@ -1,42 +1,46 @@
 body {
   margin: 0;
-  min-height: 100vh;
+  width: 100vw;
+  height: 100vh;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: #000000;
   font-family: Arial, sans-serif;
+  overflow: hidden;
 }
 
 .container {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 20px;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .circle {
-  width: 250px;
-  height: 250px;
+  width: 45px;
+  height: 45px;
   background: #bcbcbc;
   border-radius: 50%;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 20px;
+  padding: 32px;
   box-sizing: border-box;
   filter: blur(2px);
+  transition: transform 0.1s ease, filter 0.1s ease, background-color 0.1s ease;
 }
 
 .circle-text {
-  color: rgb(0, 0, 0);
-  font-size: 16px;
+  color: #000000;
+  font-size: 5px;
   font-weight: bold;
   word-wrap: break-word;
   white-space: pre-wrap;
+  line-height: 1.2;
+  font-family: 'Garamond', serif;
 }
 
 .input-section {
@@ -47,8 +51,8 @@ body {
 
 #textInput {
   padding: 10px;
-  font-size: 14px;
-  border: 1px solid #ccc;
+  font-size: 12px;
+  border: 1px solid #000000;
   border-radius: 4px;
   width: 300px;
 }
@@ -56,8 +60,8 @@ body {
 button {
   padding: 10px 20px;
   font-size: 14px;
-  background: #5b5656;
-  color: white;
+  background: #000000;
+  color: rgb(255, 255, 255);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -66,3 +70,25 @@ button {
 button:hover {
   background: #363535;
 }
+
+/* Modal-style input that appears on double-click */
+#inputModal {
+  padding: 10px;
+  border:#ffffff solid 2px;
+  border-radius: 6px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  z-index: 1000;
+}
+
+#inputModal input {
+  width: 100px;
+}
+
+/* Small responsive tweak for very narrow screens */
+@media (max-width: 380px) {
+  #inputModal input { width: 180px; }
+}
+
+

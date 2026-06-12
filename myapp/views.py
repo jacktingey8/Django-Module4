@@ -13,9 +13,21 @@ def save_text(request):
         try:
             data = json.loads(request.body)
             text = data.get('text', '')
+            x = data.get('x', None)
+            y = data.get('y', None)
             
-            message, created = SharedMessage.objects.get_or_create(id=1)
-            message.text = text
+            # Create a new message each time
+            message = SharedMessage(text=text)
+            if x is not None:
+                try:
+                    message.x = float(x)
+                except Exception:
+                    message.x = None
+            if y is not None:
+                try:
+                    message.y = float(y)
+                except Exception:
+                    message.y = None
             message.save()
             
             return JsonResponse({'success': True})
@@ -26,7 +38,16 @@ def save_text(request):
 
 def get_text(request):
     try:
-        message = SharedMessage.objects.get(id=1)
-        return JsonResponse({'text': message.text})
-    except SharedMessage.DoesNotExist:
-        return JsonResponse({'text': ''})
+        messages = SharedMessage.objects.all().order_by('-id')[:50]  # last 50 messages
+        data = [
+            {
+                'id': m.id,
+                'text': m.text,
+                'x': m.x,
+                'y': m.y
+            }
+            for m in messages
+        ]
+        return JsonResponse({'messages': data})
+    except Exception as e:
+        return JsonResponse({'messages': [], 'error': str(e)})
