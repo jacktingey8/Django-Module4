@@ -3,6 +3,12 @@ function fetchText() {
     .then(response => response.json())
     .then(data => {
       window._allMessages = data.messages || [];
+      
+      // Filter out any messages that were recently deleted locally
+      if (window._recentlyDeleted && window._recentlyDeleted.size > 0) {
+        window._allMessages = window._allMessages.filter(msg => !window._recentlyDeleted.has(msg.id));
+      }
+      
       if (!window._allMessages.length) {
         document.getElementById('displayText').textContent = 'Double-click anywhere to add a message';
       }
@@ -160,6 +166,134 @@ document.addEventListener('mousemove', (e) => {
 
 
 
+
+/**
+ * Monitors mouse state and removes a message if the user holds 
+ * down the click while within a 3px proximity threshold.
+ */
+function enableHoldToDelete() {
+  let holdTimer = null;
+  const HOLD_DURATION = 2000; // Time in milliseconds required to hold click
+  const PROXIMITY_THRESHOLD = 3; // 3-pixel boundary
+
+  // Tracks global mouse position during a click hold
+  let currentX = 0;
+  let currentY = 0;
+  let activeTargetMsg = null;
+
+  // 1. Keep track of current mouse coordinates globally
+  document.addEventListener('mousemove', (e) => {
+    currentX = e.clientX;
+    currentY = e.clientY;
+
+    // If the user is currently holding down click but moves out of the 3px zone, cancel the deletion
+    if (holdTimer && activeTargetMsg) {
+      const dx = currentX - activeTargetMsg.x;
+      const dy = currentY - activeTargetMsg.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > PROXIMITY_THRESHOLD) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+        activeTargetMsg = null;
+        console.log("Deletion canceled: Mouse moved out of the 3px threshold.");
+      }
+    }
+  });
+
+  // 2. Intercept mouse down events to check proximity and initiate hold timer
+  document.addEventListener('mousedown', (e) => {
+    // Only trigger on primary left click
+    if (e.button !== 0) return; 
+
+    if (!window._allMessages || window._allMessages.length === 0) return;
+
+    // Find if the cursor is within 3px of any message coordinates
+    let closestMsg = null;
+    let closestDist = Infinity;
+
+    for (const msg of window._allMessages) {
+      if (msg.x !== null && msg.y !== null) {
+        const dx = currentX - msg.x;
+        const dy = currentY - msg.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestMsg = msg;
+        }
+      }
+    }
+
+    // If within the tight 3px threshold, start the countdown
+    if (closestDist <= PROXIMITY_THRESHOLD && closestMsg) {
+      activeTargetMsg = closestMsg;
+      
+      holdTimer = setTimeout(() => {
+        executeMessageDeletion(activeTargetMsg);
+        holdTimer = null;
+        activeTargetMsg = null;
+      }, HOLD_DURATION);
+    }
+  });
+
+  // 3. Clear the timer if the user releases the click early
+  document.addEventListener('mouseup', () => {
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+      activeTargetMsg = null;
+    }
+  });
+
+  // Helper function to communicate the deletion to the backend
+  function executeMessageDeletion(messageToDelete) {
+    console.log("Proximity hold verification successful. Deleting:", messageToDelete);
+
+    // Initialize the recently deleted tracking set if needed
+    if (!window._recentlyDeleted) {
+      window._recentlyDeleted = new Set();
+    }
+
+    // Track the deleted message ID to prevent it from reappearing
+    if (messageToDelete.id) {
+      window._recentlyDeleted.add(messageToDelete.id);
+    }
+
+    // Optimistically update local cache UI state immediately
+    window._allMessages = window._allMessages.filter(msg => msg !== messageToDelete);
+
+    // Clear the display text if the deleted message is currently being shown
+    const displayText = document.getElementById('displayText');
+    if (displayText && displayText.textContent === messageToDelete.text) {
+      displayText.textContent = 'Double-click anywhere to add a message';
+    }
+
+    // Send delete request to backend server
+    fetch('/delete-text/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken') // Reuses your cookie security token helper
+      },
+      body: JSON.stringify({
+        text: messageToDelete.text,
+        x: messageToDelete.x,
+        y: messageToDelete.y
+      })
+    })
+    .then(response => {
+      if (!response.ok) throw new Error("Network response failure during deletion step.");
+      return response.json();
+    })
+    .catch(err => {
+      console.error("Failed to persist deletion on server:", err);
+    });
+  }
+}
+
+// Initialize the event listeners
+enableHoldToDelete();
 
 
 

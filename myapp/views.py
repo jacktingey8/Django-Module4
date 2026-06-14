@@ -51,3 +51,27 @@ def get_text(request):
         return JsonResponse({'messages': data})
     except Exception as e:
         return JsonResponse({'messages': [], 'error': str(e)})
+
+@csrf_exempt
+def delete_text(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            text = data.get('text', '')
+            x = data.get('x', None)
+            y = data.get('y', None)
+            
+            # Delete the message matching the coordinates and text
+            query = SharedMessage.objects.filter(text=text)
+            if x is not None:
+                query = query.filter(x=x)
+            if y is not None:
+                query = query.filter(y=y)
+            
+            deleted_count, _ = query.delete()
+            
+            return JsonResponse({'success': True, 'deleted': deleted_count})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+    return JsonResponse({'success': False}, status=405)
