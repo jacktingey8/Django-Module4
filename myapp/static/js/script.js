@@ -62,11 +62,14 @@ function getCookie(name) {
 }
 
 // Allow Enter key to submit
-document.getElementById('textInput').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') {
-    submitText();
-  }
-});
+const textInput = document.getElementById('textInput');
+if (textInput) {
+  textInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      submitText();
+    }
+  });
+}
 
 // Double-click anywhere to open the input modal at that position
 document.addEventListener('dblclick', (e) => {
@@ -111,8 +114,17 @@ if (sendBtn) {
 }
 
 const hum = new Audio('/static/audio/cease.wav');
-    hum.loop=true;
-    hum.play();
+hum.loop=true;
+
+
+document.addEventListener('click', () => {
+  hum.play().catch(error => {
+    console.log("Audio autoplay was blocked by the browser:", error);
+  });
+}, { once: true });
+
+// Fetch initial text when page loads
+fetchText();
 
 document.addEventListener('mousemove', (e) => {
     const circle = document.querySelector('.circle');

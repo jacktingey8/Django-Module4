@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
   </head>
   <body>
+    {% csrf_token %}
     <div class="container">
       <div class="circle">
         <div class="circle-text" id="displayText">Double-click anywhere to add a message</div>
