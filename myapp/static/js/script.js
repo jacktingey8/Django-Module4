@@ -82,9 +82,9 @@ document.addEventListener('dblclick', (e) => {
   const input = document.getElementById('textInput');
   if (!modal || !input) return;
 
-  // position modal, adjust so it doesn't overflow the viewport
-  const modalWidth = 360; // approximate
-  const modalHeight = 60; // approximate
+
+  const modalWidth = 360; 
+  const modalHeight = 60; 
   let left = x;
   let top = y;
   if (left + modalWidth > window.innerWidth) left = window.innerWidth - modalWidth - 12;
@@ -179,26 +179,22 @@ document.addEventListener('mousemove', (e) => {
 
 
 
-/**
- * Monitors mouse state and removes a message if the user holds 
- * down the click while within a 3px proximity threshold.
- */
 function enableHoldToDelete() {
   let holdTimer = null;
-  const HOLD_DURATION = 2000; // Time in milliseconds required to hold click
-  const PROXIMITY_THRESHOLD = 3; // 3-pixel boundary
+  const HOLD_DURATION = 2000; 
+  const PROXIMITY_THRESHOLD = 3;
 
-  // Tracks global mouse position during a click hold
+ 
   let currentX = 0;
   let currentY = 0;
   let activeTargetMsg = null;
 
-  // 1. Keep track of current mouse coordinates globally
+
   document.addEventListener('mousemove', (e) => {
     currentX = e.clientX;
     currentY = e.clientY;
 
-    // If the user is currently holding down click but moves out of the 3px zone, cancel the deletion
+   
     if (holdTimer && activeTargetMsg) {
       const dx = currentX - activeTargetMsg.x;
       const dy = currentY - activeTargetMsg.y;
@@ -213,7 +209,7 @@ function enableHoldToDelete() {
     }
   });
 
-  // 2. Intercept mouse down events to check proximity and initiate hold timer
+ 
   document.addEventListener('mousedown', (e) => {
     // Only trigger on primary left click
     if (e.button !== 0) return; 
